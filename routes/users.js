@@ -1,10 +1,9 @@
 const express = require('express')
 const router = express.Router()
-const listUsers = require ('../controllers/Users')
+const listUsers = require ('../controllers/users')
 
-router.get('/', (req, res) => listUsers(req, res))
 
-router.get(`/`,listUser);
+router.get('/',listUsers);
 //router.post(`/`,listUsers);
 //router.put(`/`,listUsers);
 //router.patch(`/`,listUsers);

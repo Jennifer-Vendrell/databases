@@ -1,7 +1,30 @@
 const{request,response} = require(`express`);
+const pool = require(`../../db`);
 
-const listUsers = (req = request, res = reponse) => {
-    res.json({msg: 'Users'})
+const listUsers = async (req = request, res = reponse) => {
+let conn;
+
+try{
+    conn = await pool.getConnection();
+const users = await conn.query(`SELECT * FROM Users`,(err)=> {
+    if (err){   
+
+       throw err;
+    
+    }
+}) 
+res.json(users)
+
+} 
+catch (error){
+    console.log(error);
+    res.status(500).json(error);
+
+}finally{
+    if(conn)
+        conn.end
+ }
 }
+
 
 module.exports = listUsers
