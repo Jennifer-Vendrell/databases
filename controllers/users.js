@@ -1,5 +1,5 @@
 const{request,response} = require(`express`);
-const pool = require(`../../db`);
+const pool = require(`../db`);
 
 const listUsers = async (req = request, res = reponse) => {
 let conn;

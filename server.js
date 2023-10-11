@@ -1,4 +1,7 @@
 const express = require('express');
+const cors = require(`cors`);
+require(`dotenv`).config();
+
 const usersRouter = require('./routes/users')
 
 class Server  {
@@ -23,7 +26,7 @@ class Server  {
     }
     listen(){
         this.app.listen(this.port, () => {
-            console.log('listening on port ${port}')
+            console.log('listening on port ${this.port}')
         })
     }
 }
