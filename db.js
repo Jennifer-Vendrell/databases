@@ -12,7 +12,7 @@ const config = {
     connectionlimit: process.env.DB_CONNECTION_LIMIT,
 
 }
-    const pool = mysql.createPool(config)
+    const pool = mysql.createPool(config);
 
     module.exports = pool
 
