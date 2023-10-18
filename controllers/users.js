@@ -1,103 +1,120 @@
-const{request,response} = require(`express`);
-const usersModel = require(`../models/users`);
-const pool = require(`../db`);
-
+const {request, response} = require('express');
+const usersModel = require('../models/users');
+const pool = require('../db');
 
 const listUsers = async (req = request, res = response) => {
-let conn;
+    let conn;
 
-try{
-    conn = await pool.getConnection();
+    try{
+        conn =  await pool.getConnection();
 
-const users = await conn.query(usersModel.getAll,(err)=> {
-    if (err){   
-
-       throw err;
-    
+        const users = await conn.query(usersModel.getAll,(err)=>{
+            if (err){
+                throw err;
+            }
+        })
+        res.json(users);
+    } catch (error){
+        console.log(error);
+        res.status(500).json(error);
+    } finally{
+        if (conn){
+            conn.end()
+        }
     }
-}) 
-res.json(users);
-
-} catch (error){
-
-    console.log(error);
-    res.status(500).json(error);
-
-}finally{
-    if(conn) {conn.end();}
- }
 }
 
-
-
-
-const listUserByID = async (req = request, res = response) => {
+const listUsersByID = async (req = request, res = response) => {
     const {id} = req.params;
-let conn;
+    let conn;
 
-if (isNaN(id)){
-    res.status(400).json({msg:`The ID ${id} is invalid`});
-    return;
-}
-
-
-
-try{
-    conn = await pool.getConnection();
-
-const [user] = await conn.query(usersModel.getByID,[id],(err)=> {
-    if (err){   
-
-       throw err;
-    
+    if (isNaN(id)){
+        res.status(400).json ({msg: `The ID ${id} is invalid`});
+        return;
     }
-}) 
 
+    try{
+        conn =  await pool.getConnection();
 
-if (!user){
-res.status(404).json({msg:`user with ID ${id}not found`});
- return;
+        const [user] = await conn.query(usersModel.getByID, [id] ,(err)=>{
+            if (err){
+                throw err;
+            }
+        })
 
+        if (!user){
+            res.status(404).json({msg: `User with ID ${id} not found`});
+            return;
+        }
+
+        res.json(user);
+    } catch (error){
+        console.log(error);
+        res.status(500).json(error);
+    } finally{
+        if (conn){
+            conn.end();
+        }
+    }
 }
 
-res.json(user);
+const addUser = async (req = request, res = response) =>{
+    const {
+        username,
+        password,
+        email,
+        name,
+        lastname,
+        phonenumber = '',
+        role_id,
+        is_active = 1
+    } = req.body;
 
-} catch (error){
+    if (!username || !password || !email || !name || !lastname || !role_id){
+        res.status(400).json({msg: 'Missing information'});
+        return;
+    }
 
-    console.log(error);
-    res.status(500).json(error);
+    const user = [username,password,email,name,lastname,phonenumber,role_id,is_active];
 
-}finally{
-    if(conn) {conn.end();}
- }
-}
-
-const addUser = async (req = request, res = response)=>{
     let conn;
 
     try{
         conn = await pool.getConnection();
 
-
-        //nuevo endpoint//
-
-        const userAdded = await conn.query(usersModel.addRow,[user],(err)=>{
+        const [usernameExists] = await conn.query(usersModel.getByUsername,[username],(err)=>{
             if (err) throw err;
-    
         })
-    
+        if (usernameExists){
+            res.status(409).json({msg: `Username ${username} already exists`});
+            return;
+        }
 
-        console.log(userAdded);
-        res.json(userAdded);
-    } catch (error){
+        const [emailExists] = await conn.query(usersModel.getByEmail,[email],(err)=>{
+            if (err) throw err;
+        })
+        if (emailExists){
+            res.status(409).json({msg: `Email ${email} already exists`});
+            return;
+        }
+
+        const userAdded = await conn.query(usersModel.addRow,[...user], (err)=>{
+            if (err) throw err;
+        })
+
+        if (userAdded.affectedRows === 0){
+            throw new Error('User not Added');
+        }
+        
+        res.json({msg: 'User added succesfully'})
+    } catch (error) {
         console.log(error);
         res.status(500).json(error);
-    }finally {
+    } finally{
         if (conn) conn.end();
     }
 }
 
-module.exports = {listUsers, listUserByID, addUser}
+module.exports = {listUsers, listUsersByID, addUser}
 
-
-//routes   -   controllers    - models(DB)
+// routes       controllers       models(DB)
