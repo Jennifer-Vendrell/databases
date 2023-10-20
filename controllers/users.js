@@ -115,6 +115,43 @@ const addUser = async (req = request, res = response) =>{
     }
 }
 
-module.exports = {listUsers, listUsersByID, addUser}
+//Aqui va la para actualizar un usuario si existe
+
+const userAdded = async (req = request, res = response) =>{
+    //pendiente
+}
+
+const deleteUser = async (req = request, res = response) =>{
+    let conn;
+    const {id} = req.params;
+
+    try{
+        conn = await pool.getConnection();
+        const [usersExists] = await conn.query(usersModel.getByID,[id], (err) =>{
+            if (err) throw err;
+        });
+        if (!usersExists || usersExists.is_active === 0){
+            res.status(404).json({msg: `User with ID ${id} not found`});
+            return;
+        }
+        const usersDeleted = await conn.query(usersModel.deleteRow,[id],(err) =>{
+            if (err) throw err;
+        });
+        
+        if (usersDeleted.affectedRows === 0){
+            throw new Error('User not deleted');
+        }
+
+        res.json({msg:'User deleted succesfully'});
+
+    }catch (error){
+        console.log(error);
+        res.status(500).json(error);
+    }finally {
+        if (conn) conn.end();
+    }
+}
+
+module.exports = {listUsers, listUsersByID, addUser, deleteUser}
 
 // routes       controllers       models(DB)

@@ -51,6 +51,19 @@ const usersModel = {
           ?
       )
   `,
+
+  updateRow:`
+  pendiente
+  `,
+
+  deleteRow: `
+   UPDATE
+    users
+    SET
+        is_active = 0
+    WHERE
+     id = ?
+     `,
   
 }
 
