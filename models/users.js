@@ -53,7 +53,18 @@ const usersModel = {
   `,
 
   updateRow:`
-  pendiente
+   UPDATE
+   users
+   SET
+   username,
+   password,
+   email,
+   name,
+   lastname,
+   phonenumber = '',
+   role_id,
+   is_active,
+
   `,
 
   deleteRow: `
