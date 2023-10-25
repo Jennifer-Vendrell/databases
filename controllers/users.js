@@ -1,6 +1,9 @@
 const {request, response} = require('express');
+const bcrypt = require(`bcrypt`);
 const usersModel = require('../models/users');
 const pool = require('../db');
+
+// primer endpoint
 
 const listUsers = async (req = request, res = response) => {
     let conn;
@@ -23,6 +26,9 @@ const listUsers = async (req = request, res = response) => {
         }
     }
 }
+
+
+// segundo endpoint
 
 const listUsersByID = async (req = request, res = response) => {
     const {id} = req.params;
@@ -58,6 +64,8 @@ const listUsersByID = async (req = request, res = response) => {
     }
 }
 
+// tercer endpoint
+
 const addUser = async (req = request, res = response) =>{
     const {
         usersname,
@@ -75,7 +83,18 @@ const addUser = async (req = request, res = response) =>{
         return;
     }
 
-    const user = [usersname,password,email,name,lastname,phonenumber,role_id,is_active];
+    const saltRounds = 10;
+    const passwordHash = await bcrypt.hash(password,saltRounds);
+
+    const user= 
+       [usersname,
+        passwordHash,
+        email,
+        name,
+        lastname,
+        phonenumber,
+        role_id,
+        is_active]
 
     let conn;
 
@@ -115,7 +134,7 @@ const addUser = async (req = request, res = response) =>{
     }
 }
 
-//Aqui va la para actualizar un usuario si existe
+// cuarto endpoitn Aqui va la para actualizar un usuario si existe
 const updateUser = async (req = request, res = response) => {
     let conn;
 
@@ -132,9 +151,15 @@ const updateUser = async (req = request, res = response) => {
 
     const { id } = req.params;
 
+    let passwordHash;
+    if (password){
+    const saltRounds = 10;
+     passwordHash = await bcrypt.hash(password, saltRounds);
+}
+
     let userNewData = [
         usersname,
-        password,
+        passwordHash,
         email,
         name,
         lastname,
@@ -212,7 +237,8 @@ const [emailExists] = await conn.query(usersModel.getByEmail, [email], (err) => 
         if (conn) conn.end();
     }
 }
-//
+// quinto endpoitn 
+
 const deleteUser = async (req = request, res = response) =>{
     let conn;
     const {id} = req.params;
