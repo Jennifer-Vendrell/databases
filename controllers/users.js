@@ -270,6 +270,62 @@ const deleteUser = async (req = request, res = response) =>{
     }
 }
 
-module.exports = {listUsers, listUsersByID, addUser, updateUser ,deleteUser}
+
+// sexto endpoint inicio de sesion 
+
+const signInUser = async (req = request, res = response)=> {
+    let conn;
+
+    const {usersname, password} = req.body;
+
+    conn = await pool.getConnection();
+
+    try {
+
+        
+    if (!usersname || !password){
+        res.status(404).json({msg: `you must send usersname and password`});
+        return;
+    }
+
+    const [user] = await conn.query(
+        usersModel.getByUsersname,
+        [usersname],
+        (error)=>{
+            if (error) throw err;}
+            );
+        
+            if (!user){res.status(400).json({msg: `WHONG USERNAME OR PASSWORD`});
+                return;
+            }
+
+
+
+    const password = await bcrypt.compare(password, user.password);
+    if (!password){
+        res.status(400).json({msg: `WHONG USERNAME OR PASSWORD`});
+        return;
+    }
+
+    delete(user.password);
+    delete(user.create_at);
+    delete(user.updated_at);
+
+    res.json(user);
+    
+    }catch (error){
+        console.log(error);
+        res.status(500).json(error);
+        
+    }finally{
+        if(conn)conn.end();
+    }
+}
+
+
+
+
+
+module.exports = {listUsers, listUsersByID, addUser, updateUser ,deleteUser, signInUser}
 
 // routes       controllers       models(DB)
