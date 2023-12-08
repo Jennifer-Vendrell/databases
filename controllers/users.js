@@ -1,5 +1,6 @@
 const {request, response} = require('express');
 const bcrypt = require(`bcrypt`);
+const jwt= require(`jsonwenbtoken`);
 const usersModel = require('../models/users');
 const pool = require('../db');
 
@@ -101,7 +102,7 @@ const addUser = async (req = request, res = response) =>{
     try{
         conn = await pool.getConnection();
 
-        const [usersnameExists] = await conn.query(usersModel.getByusersname,[usersname],(err)=>{
+        const [usersnameExists] = await conn.query(usersModel.getByUsersname,[usersname],(err)=>{
             if (err) throw err;
         })
         if (usersnameExists){
@@ -311,21 +312,76 @@ const signInUser = async (req = request, res = response)=> {
     delete(user.create_at);
     delete(user.updated_at);
 
-    res.json(user);
-    
-    }catch (error){
-        console.log(error);
-        res.status(500).json(error);
-        
-    }finally{
-        if(conn)conn.end();
-    }
+
+//JWT
+const token = jwt.sign({
+    id: user.id,
+    username: user.username,
+    role_id: user.role_id
+},
+process.env.JWT_SECRET_KEY,
+{expiresIn: '5m'}
+);
+
+res.json({user, token});
+
+} catch(error){
+console.log(error);
+res.status(500).json(error);
+}finally{
+if (conn) conn.end();
+}
+}
+//endpoint para validar el Token
+const verifyToken = async (token, role ) => {
+let conn;
+
+try{
+conn = await pool.getConnection();
+const decoded = jwt.verify(req.body.token, process.env.JWT_SECRET_KEY);
+
+const [user]= await conn.query
+usersModel.getByID,
+[decoded.id],
+(err)=> {
+    if(err)throw err;
 }
 
+if(!user){
+return{ok:false, msg:'user not found'};
+}
+
+const now =new Date().getTime();
+const tokenExpiration = new Date(decoded.exp = 1000);
+
+if (now > tokenExpiration){
+return{ok: false, msg:'Token expired'};
+}
+
+if (user.role_id !== role){
+return{ok: false, msg:'invalid role'};
+}
+
+const token = jwt.sign({
+id: user.id,
+username: user.username,
+role_id: user.role_id
+},
+process.env.JWT_SECRET_KEY,
+{expiresIn: '5m'}
+);
+
+return{ok: true, token};   
+} catch (error){
+console.log(error);
+return{ok: false, msg: 'Invalid token', error};
+}
+}
+   
 
 
 
 
-module.exports = {listUsers, listUsersByID, addUser, updateUser ,deleteUser, signInUser}
+module.exports = {listUsers, listUsersByID, addUser, updateUser ,deleteUser, signInUser, verifyToken}
 
 // routes       controllers       models(DB)

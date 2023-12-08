@@ -4,8 +4,11 @@ const {listUsers,
     listUsersByID,
      addUser,
       deleteUser, 
+      updateUser,
       signInUser,
-      updateUser} = require ('../controllers/users');
+      verifyToken,
+      } = require ('../controllers/users');
+      const { updateRow } = require('../models/users');
 
 
 router.get('/', listUsers);
@@ -14,6 +17,7 @@ router.post('/', signInUser);
 router.put('/', addUser);
 router.patch('/:id', updateUser);
 router.delete('/:id', deleteUser);
+router.post(`/verify`,verifyToken);
 
 module.exports = router
 
